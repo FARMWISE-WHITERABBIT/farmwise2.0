@@ -1,0 +1,501 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(0.97 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(0.985 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  --font-sans: "Inter", "Inter Fallback", system-ui, -apple-system, sans-serif;
+  --font-heading: "Poppins", "Poppins Fallback", system-ui, -apple-system, sans-serif;
+
+  /* Comprehensive color system matching Figma design */
+  /* Primary brand colors */
+  --color-primary: #39b54a;
+  --color-primary-hover: #2d5016;
+  --color-primary-light: rgba(57, 181, 74, 0.1);
+  --color-primary-medium: rgba(57, 181, 74, 0.25);
+
+  /* Background colors */
+  --color-background: #f5f5f5;
+  --color-background-muted: #f5f5f5;
+
+  /* Text colors */
+  --color-text-primary: rgba(0, 0, 0, 0.87);
+  --color-text-secondary: rgba(0, 0, 0, 0.65);
+  --color-text-muted: rgba(0, 0, 0, 0.45);
+
+  /* Border colors */
+  --color-border-default: rgba(0, 0, 0, 0.12);
+  --color-border-light: rgba(0, 0, 0, 0.08);
+
+  /* Input colors */
+  --color-input-bg: rgba(233, 236, 238, 0.65);
+
+  /* Card colors */
+  --color-card-bg: #ffffff;
+
+  /* Status colors */
+  --color-success: #39b54a;
+  --color-warning: #fbbf24;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Accent colors for stats */
+  --color-accent-pink: #ff6b9d;
+  --color-accent-pink-light: rgba(255, 182, 193, 0.3);
+  --color-accent-purple: #8a2be2;
+  --color-accent-purple-light: rgba(138, 43, 226, 0.2);
+  --color-accent-blue: #6495ed;
+  --color-accent-blue-light: rgba(100, 149, 237, 0.2);
+
+  /* Border radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5625rem;
+  --radius-2xl: 1.875rem;
+
+  /* Sidebar colors */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    /* Removed @apply border-border; as it's an unknown utility class in Tailwind v4 */
+  }
+  body {
+    /* Replaced @apply with direct CSS properties to fix Tailwind v4 compatibility */
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+}
+
+* {
+  border-color: var(--color-border-default);
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-background-muted);
+  color: var(--color-text-primary);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+}
+
+/* Utility classes for consistent styling */
+.page-background {
+  background-color: var(--color-background-muted);
+}
+
+/* Adding font utility classes for Tailwind v4 compatibility */
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+/* Legacy font class aliases for backward compatibility */
+.font-inter {
+  font-family: var(--font-sans);
+}
+
+.font-poppins {
+  font-family: var(--font-heading);
+}
+
+/* Standardized border radius utilities */
+.rounded-card {
+  border-radius: var(--radius-2xl); /* 30px / 1.875rem - for cards */
+}
+
+.rounded-button {
+  border-radius: var(--radius-md); /* 10px / 0.625rem - for buttons and inputs */
+}
+
+.rounded-tab {
+  border-radius: var(--radius-lg); /* 20px / 1.25rem - for tab lists */
+}
+
+.rounded-badge {
+  border-radius: var(--radius-sm); /* 8px / 0.5rem - for badges and small elements */
+}
+
+.card-rounded {
+  border-radius: var(--radius-2xl);
+}
+
+.button-rounded {
+  border-radius: var(--radius-md);
+}
+
+.input-rounded {
+  border-radius: var(--radius-md);
+}
+
+.text-heading {
+  color: var(--color-text-primary);
+  font-family: var(--font-heading);
+}
+
+.text-body {
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.border-default {
+  border-color: var(--color-border-default);
+}
+
+.bg-primary-light {
+  background-color: var(--color-primary-light);
+}
+
+.bg-primary-medium {
+  background-color: var(--color-primary-medium);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-primary-hover:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* Consistent color utilities */
+.bg-surface {
+  background-color: var(--color-card-bg);
+}
+
+.bg-surface-muted {
+  background-color: var(--color-background-muted);
+}
+
+.text-primary-color {
+  color: var(--color-primary);
+}
+
+.text-secondary-color {
+  color: var(--color-text-secondary);
+}
+
+.text-muted-color {
+  color: var(--color-text-muted);
+}
+
+.border-default-color {
+  border-color: var(--color-border-default);
+}
+
+/* Primary button styles */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* Adding semantic utility classes for Tailwind v4 compatibility */
+/* These utilities are used throughout shadcn/ui components */
+
+/* Background utilities */
+.bg-background {
+  background-color: var(--background);
+}
+
+.bg-foreground {
+  background-color: var(--foreground);
+}
+
+.bg-card {
+  background-color: var(--card);
+}
+
+.bg-popover {
+  background-color: var(--popover);
+}
+
+.bg-muted {
+  background-color: var(--muted);
+}
+
+.bg-accent {
+  background-color: var(--accent);
+}
+
+.bg-destructive {
+  background-color: var(--destructive);
+}
+
+.bg-input {
+  background-color: var(--input);
+}
+
+/* Text color utilities */
+.text-foreground {
+  color: var(--foreground);
+}
+
+.text-background {
+  color: var(--background);
+}
+
+.text-card-foreground {
+  color: var(--card-foreground);
+}
+
+.text-popover-foreground {
+  color: var(--popover-foreground);
+}
+
+.text-primary-foreground {
+  color: var(--primary-foreground);
+}
+
+.text-secondary-foreground {
+  color: var(--secondary-foreground);
+}
+
+.text-muted-foreground {
+  color: var(--muted-foreground);
+}
+
+.text-accent-foreground {
+  color: var(--accent-foreground);
+}
+
+.text-destructive-foreground {
+  color: var(--destructive-foreground);
+}
+
+.text-destructive {
+  color: var(--destructive);
+}
+
+/* Border utilities */
+.border-border {
+  border-color: var(--border);
+}
+
+.border-input {
+  border-color: var(--input);
+}
+
+.border-ring {
+  border-color: var(--ring);
+}
+
+.border-primary {
+  border-color: var(--primary);
+}
+
+.border-destructive {
+  border-color: var(--destructive);
+}
+
+/* Ring utilities */
+.ring-ring {
+  --tw-ring-color: var(--ring);
+}
+
+.ring-destructive {
+  --tw-ring-color: var(--destructive);
+}
+
+/* Additional hover and focus variants */
+.hover\:bg-accent:hover {
+  background-color: var(--accent);
+}
+
+.hover\:bg-muted:hover {
+  background-color: var(--muted);
+}
+
+.hover\:bg-secondary:hover {
+  background-color: var(--secondary);
+}
+
+.hover\:bg-destructive:hover {
+  background-color: var(--destructive);
+}
+
+.hover\:text-accent-foreground:hover {
+  color: var(--accent-foreground);
+}
+
+.hover\:text-foreground:hover {
+  color: var(--foreground);
+}
+
+.hover\:text-muted-foreground:hover {
+  color: var(--muted-foreground);
+}
+
+.focus\:bg-accent:focus {
+  background-color: var(--accent);
+}
+
+.focus\:text-accent-foreground:focus {
+  color: var(--accent-foreground);
+}
+
+.data-\[state\=open\]\:bg-accent[data-state="open"] {
+  background-color: var(--accent);
+}
+
+.data-\[state\=open\]\:text-accent-foreground[data-state="open"] {
+  color: var(--accent-foreground);
+}
+
+.data-\[state\=open\]\:text-muted-foreground[data-state="open"] {
+  color: var(--muted-foreground);
+}
+
+.data-\[selected\=true\]\:bg-accent[data-selected="true"] {
+  background-color: var(--accent);
+}
+
+.data-\[selected\=true\]\:text-accent-foreground[data-selected="true"] {
+  color: var(--accent-foreground);
+}
+
+/* Add responsive utilities for portrait tablet view */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  /* Optimize for portrait tablet view */
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .lg\:col-span-2 {
+    grid-column: span 1 / span 1;
+  }
+}
+
+/* Ensure bottom nav is always visible and body has padding on tablets and mobile */
+@media (max-width: 1024px) {
+  /* Increased padding to 6rem to prevent bottom nav from covering form buttons */
+  body {
+    padding-bottom: 6rem;
+  }
+
+  /* Add extra padding to forms and cards to ensure buttons are accessible */
+  .card-with-form {
+    padding-bottom: 2rem;
+  }
+}
+
+/* Ensure forms have proper spacing at the bottom on mobile/tablet */
+@media (max-width: 1024px) {
+  form {
+    padding-bottom: 2rem;
+  }
+
+  /* Ensure submit buttons in forms are not covered by bottom nav */
+  form > div:last-child {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Ensure cards are readable on all screen sizes */
+@media (max-width: 640px) {
+  .text-4xl {
+    font-size: 2rem;
+    line-height: 2.5rem;
+  }
+}
