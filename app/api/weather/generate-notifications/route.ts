@@ -1,5 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server"
-import { getWeatherData, generateFarmingAdvice, getLocationFromAddress } from "@/lib/services/weather-service"
+import { getWeatherData, generateFarmingAdvice, getLocationFromAddress } from "@/lib/weather"
 import { NextResponse } from "next/server"
 
 export const dynamic = "force-dynamic"
