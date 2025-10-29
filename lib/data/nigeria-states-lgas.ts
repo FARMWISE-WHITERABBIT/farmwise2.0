@@ -840,6 +840,11 @@ export type NigeriaLGA<T extends NigeriaState> = (typeof NIGERIA_STATES_LGAS)[T]
 
 export const NIGERIA_STATES = Object.keys(NIGERIA_STATES_LGAS) as NigeriaState[]
 
+export const NIGERIAN_STATES = Object.entries(NIGERIAN_STATES_AND_LGAS).map(([state, lgas]) => ({
+  state,
+  lgas,
+}))
+
 export function getLGAsForState(state: string): string[] {
   return NIGERIA_STATES_LGAS[state as NigeriaState] || []
 }

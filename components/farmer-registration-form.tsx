@@ -12,11 +12,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, ArrowRight, Save, Loader2 } from "lucide-react"
 import { PhotoUpload } from "@/components/photo-upload"
+import { CropSelector } from "@/components/crop-selector"
 import { useToast } from "@/hooks/use-toast"
 import { NIGERIA_STATES, getLGAsForState } from "@/lib/data/nigeria-states-lgas"
 
 interface FarmerRegistrationFormProps {
   userId: string
+}
+
+interface CropWithHectares {
+  category: string
+  crop: string
+  hectares: number
 }
 
 export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) {
@@ -25,6 +32,7 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [availableLGAs, setAvailableLGAs] = useState<string[]>([])
+  const [selectedCrops, setSelectedCrops] = useState<CropWithHectares[]>([])
 
   const [formData, setFormData] = useState({
     // Personal Information
@@ -59,9 +67,9 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
     account_name: "",
 
     // Farm Details
-    total_farm_area_hectares: "",
+    total_farm_area_hectares: "", // This will be calculated from selectedCrops if used, otherwise entered manually
     land_ownership_type: "",
-    primary_crops: "",
+    // primary_crops: "", // Replaced by selectedCrops
     farming_method: "",
     irrigation_available: false,
 
@@ -116,6 +124,8 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
 
       console.log("[v0] Generated farmer ID:", farmerId)
 
+      const primaryCrops = selectedCrops.map((c) => c.crop)
+
       const farmerData = {
         farmer_id: farmerId,
         organization_id: userData?.organization_id,
@@ -140,11 +150,14 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
         bank_name: formData.bank_name || null,
         account_number: formData.account_number || null,
         account_name: formData.account_name || null,
-        total_farm_area_hectares: formData.total_farm_area_hectares
-          ? Number.parseFloat(formData.total_farm_area_hectares)
-          : null,
+        total_farm_area_hectares:
+          selectedCrops.length > 0
+            ? selectedCrops.reduce((sum, crop) => sum + crop.hectares, 0)
+            : formData.total_farm_area_hectares
+              ? Number.parseFloat(formData.total_farm_area_hectares)
+              : null,
         land_ownership_type: formData.land_ownership_type || null,
-        primary_crops: formData.primary_crops ? formData.primary_crops.split(",").map((c) => c.trim()) : [],
+        primary_crops: primaryCrops,
         farming_method: formData.farming_method || null,
         irrigation_available: formData.irrigation_available,
         emergency_contact_name: formData.emergency_contact_name || null,
@@ -152,10 +165,11 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
         emergency_contact_relationship: formData.emergency_contact_relationship || null,
         notes: formData.notes || null,
         registered_by: userId,
+        assigned_agent_id: userId, // Automatically assign to the registering agent
         registration_source: "field_agent",
         profile_photo_url: formData.profile_photo_url || null,
         registration_date: new Date().toISOString().split("T")[0],
-        verification_status: "unverified",
+        verification_status: formData.primary_phone ? "phone_verified" : "unverified",
       }
 
       console.log("[v0] Inserting farmer data:", farmerData)
@@ -174,7 +188,8 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
         description: `Farmer ${formData.first_name} ${formData.last_name} registered successfully`,
       })
 
-      router.push("/dashboard/farmers")
+      // Redirect to the field agent dashboard
+      router.push("/dashboard/field-agent")
       router.refresh()
     } catch (err) {
       console.error("[v0] Farmer registration error:", err)
@@ -220,7 +235,7 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
               setStep(step + 1)
             }
           }}
-          className="pb-8 lg:pb-0"
+          className="pb-24 md:pb-24 lg:pb-8"
         >
           {/* Step 1: Personal Information */}
           {step === 1 && (
@@ -617,54 +632,50 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
             <div className="space-y-6">
               <h3 className="font-semibold text-lg font-poppins text-[rgba(0,0,0,0.87)]">Farm Details</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="total_farm_area_hectares" className="font-inter">
-                    Total Farm Area (Hectares)
-                  </Label>
-                  <Input
-                    id="total_farm_area_hectares"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.total_farm_area_hectares}
-                    onChange={(e) => handleInputChange("total_farm_area_hectares", e.target.value)}
-                    className="rounded-[10px] border-[rgba(0,0,0,0.23)] font-inter"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="land_ownership_type" className="font-inter">
-                    Land Ownership Type
-                  </Label>
-                  <Select
-                    value={formData.land_ownership_type}
-                    onValueChange={(value) => handleInputChange("land_ownership_type", value)}
-                  >
-                    <SelectTrigger className="rounded-[10px] border-[rgba(0,0,0,0.23)]">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="owned">Owned</SelectItem>
-                      <SelectItem value="leased">Leased</SelectItem>
-                      <SelectItem value="family_land">Family Land</SelectItem>
-                      <SelectItem value="communal">Communal</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label className="font-inter">
+                  Primary Crops <span className="text-red-500">*</span>
+                </Label>
+                <CropSelector value={selectedCrops} onChange={setSelectedCrops} />
               </div>
 
+              {/* Removed total_farm_area_hectares input as it's now calculated from selectedCrops */}
+              {/* If manual entry is still desired for cases where crops aren't selected, this can be re-added */}
+              {/*
               <div className="space-y-2">
-                <Label htmlFor="primary_crops" className="font-inter">
-                  Primary Crops (comma-separated)
+                <Label htmlFor="total_farm_area_hectares" className="font-inter">
+                  Total Farm Area (Hectares)
                 </Label>
                 <Input
-                  id="primary_crops"
-                  placeholder="e.g., Maize, Rice, Cassava"
-                  value={formData.primary_crops}
-                  onChange={(e) => handleInputChange("primary_crops", e.target.value)}
+                  id="total_farm_area_hectares"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.total_farm_area_hectares}
+                  onChange={(e) => handleInputChange("total_farm_area_hectares", e.target.value)}
                   className="rounded-[10px] border-[rgba(0,0,0,0.23)] font-inter"
                 />
+              </div>
+              */}
+
+              <div className="space-y-2">
+                <Label htmlFor="land_ownership_type" className="font-inter">
+                  Land Ownership Type
+                </Label>
+                <Select
+                  value={formData.land_ownership_type}
+                  onValueChange={(value) => handleInputChange("land_ownership_type", value)}
+                >
+                  <SelectTrigger className="rounded-[10px] border-[rgba(0,0,0,0.23)]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="owned">Owned</SelectItem>
+                    <SelectItem value="leased">Leased</SelectItem>
+                    <SelectItem value="family_land">Family Land</SelectItem>
+                    <SelectItem value="communal">Communal</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

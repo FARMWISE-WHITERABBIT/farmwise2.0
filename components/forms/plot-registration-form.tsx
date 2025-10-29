@@ -13,6 +13,7 @@ import { ArrowLeft, ArrowRight, Save } from "lucide-react"
 import { GPSLocationCapture } from "@/components/gps-location-capture"
 import { BoundaryMapper } from "@/components/boundary-mapper"
 import { PhotoUpload } from "@/components/photo-upload"
+import CropSelector from "@/components/crop-selector"
 
 interface PlotRegistrationFormProps {
   userId: string
@@ -50,8 +51,7 @@ export default function PlotRegistrationForm({ userId, organizationId }: PlotReg
     irrigation_type: "",
     irrigation_coverage_percent: "",
 
-    // Current Crop
-    current_crop: "",
+    crops: [] as Array<{ crop: string; hectares: number }>,
     planting_date: "",
     expected_harvest_date: "",
     crop_health_status: "healthy",
@@ -104,6 +104,8 @@ export default function PlotRegistrationForm({ userId, organizationId }: PlotReg
         .padStart(4, "0")
       const plotCode = `${plotCodePrefix}-${randomNum}`
 
+      const cropsData = formData.crops.length > 0 ? JSON.stringify(formData.crops) : null
+
       // Prepare data
       const plotData = {
         farmer_id: formData.farmer_id,
@@ -122,7 +124,7 @@ export default function PlotRegistrationForm({ userId, organizationId }: PlotReg
         irrigation_coverage_percent: formData.irrigation_coverage_percent
           ? Number.parseFloat(formData.irrigation_coverage_percent)
           : null,
-        current_crop: formData.current_crop || null,
+        current_crop: cropsData,
         planting_date: formData.planting_date || null,
         expected_harvest_date: formData.expected_harvest_date || null,
         crop_health_status: formData.crop_health_status,
@@ -417,15 +419,11 @@ export default function PlotRegistrationForm({ userId, organizationId }: PlotReg
               <h3 className="font-poppins font-semibold text-lg text-[#000000]">Current Crop</h3>
 
               <div className="space-y-2">
-                <Label htmlFor="current_crop" className="font-inter">
-                  Current Crop
-                </Label>
-                <Input
-                  id="current_crop"
-                  placeholder="e.g., Maize, Rice, Cassava"
-                  value={formData.current_crop}
-                  onChange={(e) => handleInputChange("current_crop", e.target.value)}
-                  className="rounded-[10px] font-inter"
+                <Label className="font-inter">Crops</Label>
+                <CropSelector
+                  value={formData.crops}
+                  onChange={(crops) => handleInputChange("crops", crops)}
+                  placeholder="Select crops and specify hectares for each"
                 />
               </div>
 

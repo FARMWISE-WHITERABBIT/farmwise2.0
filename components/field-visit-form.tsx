@@ -16,17 +16,21 @@ import { PhotoUpload } from "@/components/photo-upload"
 import { GPSLocationCapture } from "@/components/gps-location-capture"
 
 interface FieldVisitFormProps {
-  userId: string
+  agentId: string
+  farmers: Array<{ id: string; farmer_id: string; first_name: string; last_name: string }>
+  initialFarmerId?: string
+  initialPlots?: Array<{ id: string; plot_name: string; plot_code: string }>
 }
 
-export default function FieldVisitForm({ userId }: FieldVisitFormProps) {
+export function FieldVisitForm({ agentId, farmers, initialFarmerId, initialPlots }: FieldVisitFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [farmers, setFarmers] = useState<any[]>([])
+  const [plots, setPlots] = useState<any[]>(initialPlots || [])
 
   const [formData, setFormData] = useState({
-    farmer_id: "",
+    farmer_id: initialFarmerId || "",
+    plot_id: "",
     visit_date: new Date().toISOString().split("T")[0],
     visit_type: "routine",
     location: null as { lat: number; lng: number } | null,
@@ -38,19 +42,24 @@ export default function FieldVisitForm({ userId }: FieldVisitFormProps) {
   })
 
   useEffect(() => {
-    const loadFarmers = async () => {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from("farmers")
-        .select("id, farmer_id, first_name, last_name")
-        .eq("assigned_agent_id", userId)
-        .order("first_name")
+    if (formData.farmer_id) {
+      const loadPlots = async () => {
+        const supabase = createClient()
+        const { data } = await supabase
+          .from("farm_plots")
+          .select("id, plot_name, plot_code")
+          .eq("farmer_id", formData.farmer_id)
+          .order("plot_name")
 
-      if (data) setFarmers(data)
+        if (data) setPlots(data)
+      }
+
+      loadPlots()
+    } else {
+      setPlots([])
+      setFormData((prev) => ({ ...prev, plot_id: "" }))
     }
-
-    loadFarmers()
-  }, [userId])
+  }, [formData.farmer_id])
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -73,7 +82,8 @@ export default function FieldVisitForm({ userId }: FieldVisitFormProps) {
 
       const visitData = {
         farmer_id: formData.farmer_id,
-        agent_id: userId,
+        plot_id: formData.plot_id || null,
+        agent_id: agentId,
         visit_date: formData.visit_date,
         visit_type: formData.visit_type,
         location: formData.location ? `POINT(${formData.location.lng} ${formData.location.lat})` : null,
@@ -82,14 +92,19 @@ export default function FieldVisitForm({ userId }: FieldVisitFormProps) {
         crop_health: formData.crop_health || null,
         pest_disease_notes: formData.pest_disease_notes || null,
         photos: formData.photos,
-        created_by: userId,
+        created_by: agentId,
       }
 
       const { error: insertError } = await supabase.from("field_visits").insert(visitData)
 
       if (insertError) throw insertError
 
-      router.push("/dashboard/field-agent/visits")
+      if (initialFarmerId) {
+        router.push(`/dashboard/farmers/${initialFarmerId}`)
+      } else {
+        router.push("/dashboard/field-agent")
+      }
+      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
@@ -97,31 +112,62 @@ export default function FieldVisitForm({ userId }: FieldVisitFormProps) {
     }
   }
 
+  const selectedFarmer = farmers.find((f) => f.id === formData.farmer_id)
+
   return (
     <Card className="rounded-[25px] border-none shadow-sm">
       <CardContent className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="farmer_id" className="font-inter">
-              Farmer <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={formData.farmer_id}
-              onValueChange={(value) => handleInputChange("farmer_id", value)}
-              required
-            >
-              <SelectTrigger className="rounded-[10px] font-inter">
-                <SelectValue placeholder="Select farmer" />
-              </SelectTrigger>
-              <SelectContent>
-                {farmers.map((farmer) => (
-                  <SelectItem key={farmer.id} value={farmer.id}>
-                    {farmer.first_name} {farmer.last_name} ({farmer.farmer_id})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-6 pb-24 md:pb-24 lg:pb-8">
+          {!initialFarmerId ? (
+            <div className="space-y-2">
+              <Label htmlFor="farmer_id" className="font-inter">
+                Farmer <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.farmer_id}
+                onValueChange={(value) => handleInputChange("farmer_id", value)}
+                required
+              >
+                <SelectTrigger className="rounded-[10px] font-inter">
+                  <SelectValue placeholder="Select farmer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {farmers.map((farmer) => (
+                    <SelectItem key={farmer.id} value={farmer.id}>
+                      {farmer.first_name} {farmer.last_name} ({farmer.farmer_id})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div className="bg-[rgba(57,181,74,0.1)] border border-[rgba(57,181,74,0.3)] rounded-[10px] p-4">
+              <p className="text-sm text-[rgba(0,0,0,0.65)] font-inter mb-1">Logging activity for:</p>
+              <p className="font-poppins font-semibold text-[rgba(0,0,0,0.87)]">
+                {selectedFarmer?.first_name} {selectedFarmer?.last_name} ({selectedFarmer?.farmer_id})
+              </p>
+            </div>
+          )}
+
+          {plots.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="plot_id" className="font-inter">
+                Plot (Optional)
+              </Label>
+              <Select value={formData.plot_id} onValueChange={(value) => handleInputChange("plot_id", value)}>
+                <SelectTrigger className="rounded-[10px] font-inter">
+                  <SelectValue placeholder="Select plot" />
+                </SelectTrigger>
+                <SelectContent>
+                  {plots.map((plot) => (
+                    <SelectItem key={plot.id} value={plot.id}>
+                      {plot.plot_name} ({plot.plot_code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -282,3 +328,5 @@ export default function FieldVisitForm({ userId }: FieldVisitFormProps) {
     </Card>
   )
 }
+
+export default FieldVisitForm

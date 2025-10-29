@@ -30,18 +30,22 @@ export default async function FieldAgentDashboard() {
     redirect("/dashboard")
   }
 
-  // Get agent's assigned farmers with full details
-  const { data: farmers } = await supabase
-    .from("farmers")
-    .select(`
-      *,
-      organization:organizations(org_name),
-      plots:farm_plots(id, plot_name, size_hectares)
-    `)
-    .eq("assigned_agent_id", user.id)
-    .order("created_at", { ascending: false })
+  console.log("[v0] Fetching farmers for agent:", user.id)
 
-  const farmerCount = farmers?.length || 0
+  const {
+    data: farmers,
+    count: farmerCount,
+    error: farmerError,
+  } = await supabase
+    .from("farmers")
+    .select("*", { count: "exact" })
+    .or(`assigned_agent_id.eq.${user.id},registered_by.eq.${user.id}`)
+    .order("created_at", { ascending: false })
+    .limit(5)
+
+  console.log("[v0] Farmer count:", farmerCount)
+  console.log("[v0] Farmers data:", farmers)
+  console.log("[v0] Farmer error:", farmerError)
 
   const getCoordinatesForLocation = (state: string | null, lga: string | null) => {
     // Default to Abuja if no location data
@@ -65,7 +69,7 @@ export default async function FieldAgentDashboard() {
   const weatherLocation = getCoordinatesForLocation(userData?.state, userData?.lga)
 
   return (
-    <div className="flex-1 space-y-6 p-6 md:p-8 pb-24 md:pb-8">
+    <div className="flex-1 space-y-6 p-6 md:p-8 pb-24 md:pb-24 lg:pb-8">
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-poppins font-semibold text-[rgba(0,0,0,0.87)]">
@@ -115,7 +119,7 @@ export default async function FieldAgentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-poppins font-bold text-[#39B54A]">{farmerCount}</span>
+              <span className="text-4xl font-poppins font-bold text-[#39B54A]">{farmerCount || 0}</span>
               <span className="text-sm text-[rgba(0,0,0,0.65)] font-inter">assigned to you</span>
             </div>
             <Button asChild variant="link" className="text-[#39B54A] hover:text-[#2D5016] p-0 h-auto mt-3 font-inter">
@@ -130,7 +134,7 @@ export default async function FieldAgentDashboard() {
           <CardTitle className="font-poppins text-lg text-[rgba(0,0,0,0.87)]">Your Farmers</CardTitle>
         </CardHeader>
         <CardContent>
-          {!farmers || farmers.length === 0 ? (
+          {!farmerCount || farmerCount === 0 ? (
             <div className="text-center py-12">
               <Users className="h-12 w-12 mx-auto text-[rgba(0,0,0,0.45)] mb-4" />
               <p className="text-[rgba(0,0,0,0.65)] font-inter mb-4">No farmers assigned yet</p>
@@ -143,7 +147,7 @@ export default async function FieldAgentDashboard() {
             </div>
           ) : (
             <div className="space-y-3">
-              {farmers.map((farmer: any) => (
+              {farmers?.map((farmer: any) => (
                 <Link
                   key={farmer.id}
                   href={`/dashboard/farmers/${farmer.id}`}
@@ -158,9 +162,7 @@ export default async function FieldAgentDashboard() {
                       <p className="font-poppins font-medium text-[rgba(0,0,0,0.87)]">
                         {farmer.first_name} {farmer.last_name}
                       </p>
-                      <p className="text-xs text-[rgba(0,0,0,0.65)] font-inter">
-                        {farmer.plots?.length || 0} plot(s) • {farmer.primary_phone}
-                      </p>
+                      <p className="text-xs text-[rgba(0,0,0,0.65)] font-inter">{farmer.primary_phone}</p>
                     </div>
                   </div>
                   <Button
@@ -172,6 +174,11 @@ export default async function FieldAgentDashboard() {
                   </Button>
                 </Link>
               ))}
+              {farmerCount > 5 && (
+                <Button asChild variant="link" className="w-full text-[#39B54A] hover:text-[#2D5016] font-inter">
+                  <Link href="/dashboard/farmers">View all {farmerCount} farmers →</Link>
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
