@@ -2,7 +2,8 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { FarmerProfileClient } from "@/components/farmer-profile-client"
 
-export default async function FarmerDetailPage({ params }: { params: { id: string } }) {
+export default async function FarmerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
 
   const {
@@ -13,15 +14,15 @@ export default async function FarmerDetailPage({ params }: { params: { id: strin
     redirect("/auth/login")
   }
 
-  if (params.id === "new") {
+  if (id === "new") {
     redirect("/dashboard/farmers")
   }
 
-  console.log("[v0] Fetching farmer details for ID:", params.id)
+  console.log("[v0] Fetching farmer details for ID:", id)
   console.log("[v0] Current user:", user.id)
 
   // Fetch farmer details
-  const { data: farmer, error: farmerError } = await supabase.from("farmers").select("*").eq("id", params.id).single()
+  const { data: farmer, error: farmerError } = await supabase.from("farmers").select("*").eq("id", id).single()
 
   console.log("[v0] Farmer data:", farmer)
   console.log("[v0] Farmer error:", farmerError)
@@ -53,7 +54,7 @@ export default async function FarmerDetailPage({ params }: { params: { id: strin
   const { data: plots, error: plotsError } = await supabase
     .from("farm_plots")
     .select("*")
-    .eq("farmer_id", params.id)
+    .eq("farmer_id", id)
     .order("created_at", { ascending: false })
 
   if (plotsError) {
@@ -67,7 +68,7 @@ export default async function FarmerDetailPage({ params }: { params: { id: strin
       *,
       farm_plots (plot_code, plot_name)
     `)
-    .eq("farmer_id", params.id)
+    .eq("farmer_id", id)
     .order("activity_date", { ascending: false })
     .limit(20)
 
@@ -78,7 +79,7 @@ export default async function FarmerDetailPage({ params }: { params: { id: strin
   const { data: fieldVisits, error: visitsError } = await supabase
     .from("field_visits")
     .select("*")
-    .eq("farmer_id", params.id)
+    .eq("farmer_id", id)
     .order("visit_date", { ascending: false })
 
   if (visitsError) {
@@ -88,7 +89,7 @@ export default async function FarmerDetailPage({ params }: { params: { id: strin
   const { data: financialSummary, error: financialError } = await supabase
     .from("farmer_financial_summary")
     .select("*")
-    .eq("farmer_id", params.id)
+    .eq("farmer_id", id)
     .single()
 
   if (financialError && financialError.code !== "PGRST116") {
@@ -125,7 +126,7 @@ export default async function FarmerDetailPage({ params }: { params: { id: strin
       activities={activities || []}
       allPhotos={allPhotos}
       financialSummary={financialSummary}
-      farmerId={params.id}
+      farmerId={id}
     />
   )
 }
