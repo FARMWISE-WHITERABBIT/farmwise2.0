@@ -179,8 +179,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   }
   const { data: allFarmers } = await farmersQuery
 
-  const maleFarmers = allFarmers?.filter((f) => f.gender?.toLowerCase() === "male").length || 0
-  const femaleFarmers = allFarmers?.filter((f) => f.gender?.toLowerCase() === "female").length || 0
+  console.log("[v0] Total farmers:", allFarmers?.length)
+  console.log(
+    "[v0] Farmer gender values:",
+    allFarmers?.map((f) => ({ id: f.id, gender: f.gender })),
+  )
+
+  const maleFarmers = allFarmers?.filter((f) => f.gender && f.gender.toLowerCase() === "male").length || 0
+  const femaleFarmers = allFarmers?.filter((f) => f.gender && f.gender.toLowerCase() === "female").length || 0
+
+  console.log("[v0] Male count:", maleFarmers)
+  console.log("[v0] Female count:", femaleFarmers)
 
   let orgsQuery = supabase.from("organizations").select("id, org_type")
   if (filterOrgId) {

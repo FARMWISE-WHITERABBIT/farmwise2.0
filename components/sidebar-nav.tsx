@@ -8,7 +8,6 @@ import {
   Building2,
   Users,
   UserCog,
-  TrendingUp,
   DollarSign,
   FileText,
   Settings,
@@ -18,6 +17,7 @@ import {
   X,
   BarChart3,
   CheckSquare,
+  ShoppingBag,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -91,9 +91,26 @@ const navItems = [
     ],
   },
   {
-    title: "Crop Yield",
-    href: "/dashboard/yield",
-    icon: TrendingUp,
+    title: "Shop",
+    icon: ShoppingBag,
+    roles: ["super_admin", "admin", "manager", "field_agent"] as UserRole[],
+    children: [
+      {
+        title: "Browse Shop",
+        href: "/dashboard/shop/browse",
+        roles: ["super_admin", "admin", "manager", "field_agent"] as UserRole[],
+      },
+      {
+        title: "Manage Shop",
+        href: "/dashboard/shop",
+        roles: ["super_admin", "admin", "manager"] as UserRole[],
+      },
+    ],
+  },
+  {
+    title: "Analytics",
+    href: "/dashboard/analytics",
+    icon: BarChart3,
     roles: ["super_admin", "admin", "manager", "analyst"] as UserRole[],
   },
   {
@@ -151,6 +168,7 @@ export function SidebarNav({ isOpen, onClose }: { isOpen?: boolean; onClose?: ()
   const pathname = usePathname()
   const [openItems, setOpenItems] = useState<string[]>([])
   const [userRole, setUserRole] = useState<UserRole | null>(null)
+  const [orgLogo, setOrgLogo] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -160,10 +178,26 @@ export function SidebarNav({ isOpen, onClose }: { isOpen?: boolean; onClose?: ()
       } = await supabase.auth.getUser()
 
       if (user) {
-        const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
+        const { data: userData } = await supabase
+          .from("users")
+          .select("role, organization_id")
+          .eq("id", user.id)
+          .single()
 
         if (userData) {
           setUserRole(userData.role as UserRole)
+
+          if (userData.organization_id) {
+            const { data: orgSettings } = await supabase
+              .from("organization_settings")
+              .select("logo_url")
+              .eq("organization_id", userData.organization_id)
+              .single()
+
+            if (orgSettings?.logo_url) {
+              setOrgLogo(orgSettings.logo_url)
+            }
+          }
         }
       }
     }
@@ -195,11 +229,11 @@ export function SidebarNav({ isOpen, onClose }: { isOpen?: boolean; onClose?: ()
         <div className="flex items-center justify-between p-6 pb-4">
           <Link href="/dashboard" className="flex items-center">
             <Image
-              src="/farmwise-logo-green.png"
-              alt="Farmwise"
+              src={orgLogo || "/farmwise-logo-green.png"}
+              alt={orgLogo ? "Organization Logo" : "Farmwise"}
               width={140}
               height={47}
-              className="w-auto h-10"
+              className="w-auto h-10 object-contain"
               priority
             />
           </Link>

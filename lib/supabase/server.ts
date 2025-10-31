@@ -11,6 +11,8 @@ async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries = 3, initial
       lastError = error as Error
       const errorMessage = error instanceof Error ? error.message : String(error)
 
+      console.log(`[v0] Retry attempt ${attempt + 1}/${maxRetries}, error:`, errorMessage)
+
       // Don't retry on authentication errors or invalid tokens
       if (
         errorMessage.includes("401") ||
@@ -22,9 +24,15 @@ async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries = 3, initial
         throw error
       }
 
+      // Don't retry on fetch errors - they're likely environmental
+      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("fetch")) {
+        console.log("[v0] Fetch error detected, not retrying")
+        throw error
+      }
+
       if (attempt < maxRetries - 1) {
         const delay = initialDelay * Math.pow(2, attempt)
-        console.log(`[v0] Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`)
+        console.log(`[v0] Waiting ${delay}ms before retry`)
         await new Promise((resolve) => setTimeout(resolve, delay))
       }
     }
@@ -51,7 +59,26 @@ export async function createClient() {
     )
   }
 
+  console.log("[v0] Creating Supabase server client with URL:", supabaseUrl)
+
+  const customFetch: typeof fetch = async (input, init) => {
+    try {
+      console.log("[v0] Server fetch request:", typeof input === "string" ? input : input.url)
+      const response = await fetch(input, init)
+      console.log("[v0] Server fetch response status:", response.status)
+      return response
+    } catch (error) {
+      console.error("[v0] Server fetch error:", error instanceof Error ? error.message : "Unknown error")
+      console.error("[v0] Fetch error details:", error)
+      // Re-throw the error so Supabase can handle it
+      throw error
+    }
+  }
+
   return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      fetch: customFetch,
+    },
     cookies: {
       getAll() {
         return cookieStore.getAll()
@@ -81,20 +108,20 @@ export async function getAuthUser() {
         const { data, error } = await supabase.auth.getUser()
 
         if (error) {
+          console.error("[v0] Auth error:", error.message)
           // Log but don't throw for token refresh errors - let middleware handle redirect
           if (error.message.includes("Invalid Refresh Token") || error.message.includes("refresh_token_not_found")) {
             console.log("[v0] Auth token expired or invalid")
             return { user: null }
           }
-          console.error("[v0] Auth error:", error.message)
           throw error
         }
 
         return data
       },
-      2,
+      1, // Reduced to 1 retry for faster failure on fetch errors
       300,
-    ) // Reduced retries and delay for faster failure
+    )
   } catch (error) {
     console.error("[v0] Failed to get auth user:", error instanceof Error ? error.message : "Unknown error")
     return { user: null }

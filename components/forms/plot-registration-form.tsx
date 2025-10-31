@@ -28,6 +28,7 @@ export default function PlotRegistrationForm({ userId, organizationId }: PlotReg
 
   // Dropdown data
   const [farmers, setFarmers] = useState<any[]>([])
+  const [preSelectedFarmerId, setPreSelectedFarmerId] = useState<string | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -72,6 +73,13 @@ export default function PlotRegistrationForm({ userId, organizationId }: PlotReg
         .order("first_name")
 
       if (farmersData) setFarmers(farmersData)
+
+      const params = new URLSearchParams(window.location.search)
+      const farmerIdParam = params.get("farmer_id")
+      if (farmerIdParam) {
+        setPreSelectedFarmerId(farmerIdParam)
+        handleInputChange("farmer_id", farmerIdParam)
+      }
     }
 
     loadFarmers()
@@ -180,27 +188,42 @@ export default function PlotRegistrationForm({ userId, organizationId }: PlotReg
             <div className="space-y-4">
               <h3 className="font-poppins font-semibold text-lg text-[#000000]">Basic Information</h3>
 
-              <div className="space-y-2">
-                <Label htmlFor="farmer_id" className="font-inter">
-                  Farmer <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={formData.farmer_id}
-                  onValueChange={(value) => handleInputChange("farmer_id", value)}
-                  required
-                >
-                  <SelectTrigger className="rounded-[10px] font-inter">
-                    <SelectValue placeholder="Select farmer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {farmers.map((farmer) => (
-                      <SelectItem key={farmer.id} value={farmer.id}>
-                        {farmer.first_name} {farmer.last_name} ({farmer.farmer_id})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {preSelectedFarmerId ? (
+                <div className="space-y-2">
+                  <Label className="font-inter">Farmer</Label>
+                  <div className="p-3 rounded-[10px] bg-[rgba(57,181,74,0.1)] border border-[#39B54A]">
+                    <p className="font-inter text-sm text-[rgba(0,0,0,0.87)]">
+                      {farmers.find((f) => f.id === preSelectedFarmerId)?.first_name}{" "}
+                      {farmers.find((f) => f.id === preSelectedFarmerId)?.last_name}
+                    </p>
+                    <p className="text-xs text-[rgba(0,0,0,0.65)] font-inter">
+                      Farmer ID: {farmers.find((f) => f.id === preSelectedFarmerId)?.farmer_id}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="farmer_id" className="font-inter">
+                    Farmer <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.farmer_id}
+                    onValueChange={(value) => handleInputChange("farmer_id", value)}
+                    required
+                  >
+                    <SelectTrigger className="rounded-[10px] font-inter">
+                      <SelectValue placeholder="Select farmer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {farmers.map((farmer) => (
+                        <SelectItem key={farmer.id} value={farmer.id}>
+                          {farmer.first_name} {farmer.last_name} ({farmer.farmer_id})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="plot_name" className="font-inter">

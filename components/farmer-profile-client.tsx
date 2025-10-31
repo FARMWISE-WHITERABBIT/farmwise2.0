@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   Camera,
   DollarSign,
+  Beef,
 } from "lucide-react"
 import Link from "next/link"
 import { PhotoGallery } from "@/components/photo-gallery"
@@ -28,6 +29,7 @@ interface FarmerProfileClientProps {
   farmerUser: any
   plots: any[]
   activities: any[]
+  livestock: any[]
   allPhotos: string[]
   financialSummary: any
   farmerId: string
@@ -38,6 +40,7 @@ export function FarmerProfileClient({
   farmerUser,
   plots,
   activities,
+  livestock,
   allPhotos,
   financialSummary,
   farmerId,
@@ -58,30 +61,32 @@ export function FarmerProfileClient({
   return (
     <div className="space-y-6 pb-24 md:pb-24 lg:pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="outline" size="icon">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto min-w-0">
+          <Button asChild variant="outline" size="icon" className="shrink-0 bg-transparent">
             <Link href="/dashboard/farmers">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             {farmer.profile_photo_url && (
               <img
                 src={farmer.profile_photo_url || "/placeholder.svg"}
                 alt={`${farmer.first_name} ${farmer.last_name}`}
-                className="w-16 h-16 rounded-full object-cover border-2 border-[#39B54A]"
+                className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full object-cover border-2 border-[#39B54A] shrink-0"
               />
             )}
-            <div>
-              <h1 className="text-[32px] font-semibold font-poppins text-[rgba(0,0,0,0.87)]">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold font-poppins text-[rgba(0,0,0,0.87)] truncate">
                 {farmer.title} {farmer.first_name} {farmer.last_name}
               </h1>
-              <p className="text-sm font-inter text-[rgba(0,0,0,0.65)]">Farmer ID: {farmer.farmer_id}</p>
+              <p className="text-xs sm:text-sm font-inter text-[rgba(0,0,0,0.65)] truncate">
+                Farmer ID: {farmer.farmer_id}
+              </p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           <Badge
             className={
               farmer.verification_status === "fully_verified"
@@ -161,6 +166,10 @@ export function FarmerProfileClient({
           <TabsTrigger value="plots" className="rounded-[8px]">
             <Map className="h-4 w-4 mr-2" />
             Farm Plots ({plots?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="livestock" className="rounded-[8px]">
+            <Beef className="h-4 w-4 mr-2" />
+            Livestock ({livestock?.length || 0})
           </TabsTrigger>
           <TabsTrigger value="activities" className="rounded-[8px]">
             <Activity className="h-4 w-4 mr-2" />
@@ -431,6 +440,102 @@ export function FarmerProfileClient({
           )}
         </TabsContent>
 
+        {/* Livestock Tab */}
+        <TabsContent value="livestock" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[rgba(0,0,0,0.65)] font-inter">{livestock?.length || 0} livestock record(s)</p>
+            <Button
+              size="sm"
+              className="bg-[#39B54A] hover:bg-[#2d8f3a]"
+              onClick={() => router.push(`/dashboard/livestock/new?farmer_id=${farmerId}`)}
+            >
+              <Beef className="h-4 w-4 mr-2" />
+              Add Livestock
+            </Button>
+          </div>
+
+          {livestock && livestock.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {livestock.map((animal) => (
+                <Card key={animal.id} className="border-[rgba(0,0,0,0.12)] rounded-[15px]">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="font-poppins text-lg capitalize">{animal.livestock_type}</CardTitle>
+                        <CardDescription className="font-inter">
+                          {animal.tag_number || animal.identification}
+                        </CardDescription>
+                      </div>
+                      <Badge
+                        className={
+                          animal.health_status === "healthy"
+                            ? "bg-green-100 text-green-700"
+                            : animal.health_status === "sick"
+                              ? "bg-red-100 text-red-700"
+                              : animal.health_status === "under_treatment"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-gray-100 text-gray-700"
+                        }
+                      >
+                        {animal.health_status}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-xs text-[rgba(0,0,0,0.45)] font-inter">Breed</p>
+                        <p className="font-medium font-inter">{animal.breed || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-[rgba(0,0,0,0.45)] font-inter">Quantity</p>
+                        <p className="font-semibold text-[#39B54A] font-inter">{animal.quantity}</p>
+                      </div>
+                      {animal.age_months && (
+                        <div>
+                          <p className="text-xs text-[rgba(0,0,0,0.45)] font-inter">Age</p>
+                          <p className="font-medium font-inter">{animal.age_months} months</p>
+                        </div>
+                      )}
+                      {animal.weight_kg && (
+                        <div>
+                          <p className="text-xs text-[rgba(0,0,0,0.45)] font-inter">Weight</p>
+                          <p className="font-medium font-inter">{animal.weight_kg} kg</p>
+                        </div>
+                      )}
+                    </div>
+                    {animal.acquisition_cost && (
+                      <div className="pt-3 border-t border-[rgba(0,0,0,0.12)]">
+                        <p className="text-xs text-[rgba(0,0,0,0.45)] font-inter">Acquisition Cost</p>
+                        <p className="font-semibold text-[#39B54A] font-inter">
+                          ₦{animal.acquisition_cost.toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="border-[rgba(0,0,0,0.12)] rounded-[20px]">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Beef className="h-12 w-12 text-[rgba(0,0,0,0.25)] mb-4" />
+                <p className="text-lg font-medium text-[rgba(0,0,0,0.45)] mb-2 font-poppins">No livestock recorded</p>
+                <p className="text-sm text-[rgba(0,0,0,0.45)] mb-4 font-inter">
+                  Start tracking livestock for this farmer
+                </p>
+                <Button
+                  className="bg-[#39B54A] hover:bg-[#2d8f3a]"
+                  onClick={() => router.push(`/dashboard/livestock/new?farmer_id=${farmerId}`)}
+                >
+                  <Beef className="h-4 w-4 mr-2" />
+                  Add First Livestock
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
         {/* Activities Tab */}
         <TabsContent value="activities" className="space-y-4">
           <div className="flex items-center justify-between">
@@ -543,6 +648,10 @@ export function FarmerProfileClient({
                 <p className="text-sm text-[rgba(0,0,0,0.45)] mb-4 font-inter">
                   Photos from field visits and plot registrations will appear here
                 </p>
+                <Button className="bg-[#39B54A] hover:bg-[#2d8f3a]">
+                  <Camera className="h-4 w-4 mr-2" />
+                  Upload Document
+                </Button>
               </CardContent>
             </Card>
           )}

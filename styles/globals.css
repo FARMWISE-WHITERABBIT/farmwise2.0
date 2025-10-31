@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -75,8 +75,8 @@
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-sans: 'Geist', 'Geist Fallback';
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -117,183 +117,9 @@
 
 @layer base {
   * {
-    border-color: var(--color-border);
+    @apply border-border outline-ring/50;
   }
   body {
-    /* Replaced @apply with direct CSS properties to fix Tailwind v4 compatibility */
-    background-color: var(--background);
-    color: var(--foreground);
+    @apply bg-background text-foreground;
   }
-}
-
-/* Adding semantic utility classes for Tailwind v4 compatibility */
-/* These utilities are used throughout shadcn/ui components */
-
-/* Background utilities */
-.bg-background {
-  background-color: var(--background);
-}
-
-.bg-foreground {
-  background-color: var(--foreground);
-}
-
-.bg-card {
-  background-color: var(--card);
-}
-
-.bg-popover {
-  background-color: var(--popover);
-}
-
-.bg-muted {
-  background-color: var(--muted);
-}
-
-.bg-accent {
-  background-color: var(--accent);
-}
-
-.bg-destructive {
-  background-color: var(--destructive);
-}
-
-.bg-input {
-  background-color: var(--input);
-}
-
-.bg-secondary {
-  background-color: var(--secondary);
-}
-
-/* Text color utilities */
-.text-foreground {
-  color: var(--foreground);
-}
-
-.text-background {
-  color: var(--background);
-}
-
-.text-card-foreground {
-  color: var(--card-foreground);
-}
-
-.text-popover-foreground {
-  color: var(--popover-foreground);
-}
-
-.text-primary-foreground {
-  color: var(--primary-foreground);
-}
-
-.text-secondary-foreground {
-  color: var(--secondary-foreground);
-}
-
-.text-muted-foreground {
-  color: var(--muted-foreground);
-}
-
-.text-accent-foreground {
-  color: var(--accent-foreground);
-}
-
-.text-destructive-foreground {
-  color: var(--destructive-foreground);
-}
-
-.text-destructive {
-  color: var(--destructive);
-}
-
-.text-primary {
-  color: var(--primary);
-}
-
-/* Border utilities */
-.border-border {
-  border-color: var(--border);
-}
-
-.border-input {
-  border-color: var(--input);
-}
-
-.border-ring {
-  border-color: var(--ring);
-}
-
-.border-primary {
-  border-color: var(--primary);
-}
-
-.border-destructive {
-  border-color: var(--destructive);
-}
-
-/* Ring utilities */
-.ring-ring {
-  --tw-ring-color: var(--ring);
-}
-
-.ring-destructive {
-  --tw-ring-color: var(--destructive);
-}
-
-/* Additional hover and focus variants */
-.hover\:bg-accent:hover {
-  background-color: var(--accent);
-}
-
-.hover\:bg-muted:hover {
-  background-color: var(--muted);
-}
-
-.hover\:bg-secondary:hover {
-  background-color: var(--secondary);
-}
-
-.hover\:bg-destructive:hover {
-  background-color: var(--destructive);
-}
-
-.hover\:text-accent-foreground:hover {
-  color: var(--accent-foreground);
-}
-
-.hover\:text-foreground:hover {
-  color: var(--foreground);
-}
-
-.hover\:text-muted-foreground:hover {
-  color: var(--muted-foreground);
-}
-
-.focus\:bg-accent:focus {
-  background-color: var(--accent);
-}
-
-.focus\:text-accent-foreground:focus {
-  color: var(--accent-foreground);
-}
-
-.data-\[state\=open\]\:bg-accent[data-state="open"] {
-  background-color: var(--accent);
-}
-
-.data-\[state\=open\]\:text-accent-foreground[data-state="open"] {
-  color: var(--accent-foreground);
-}
-
-.data-\[state\=open\]\:text-muted-foreground[data-state="open"] {
-  color: var(--muted-foreground);
-}
-
-.data-\[selected\=true\]\:bg-accent[data-selected="true"] {
-  background-color: var(--accent);
-}
-
-.data-\[selected\=true\]\:text-accent-foreground[data-selected="true"] {
-  color: var(--accent-foreground);
 }

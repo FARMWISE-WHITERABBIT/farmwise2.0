@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Save, ArrowLeft } from "lucide-react"
+import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react"
 import { PhotoUpload } from "@/components/photo-upload"
 import { GPSLocationCapture } from "@/components/gps-location-capture"
 
@@ -20,6 +20,14 @@ interface FieldVisitFormProps {
   farmers: Array<{ id: string; farmer_id: string; first_name: string; last_name: string }>
   initialFarmerId?: string
   initialPlots?: Array<{ id: string; plot_name: string; plot_code: string }>
+}
+
+interface Disbursement {
+  item_name: string
+  quantity: number
+  unit: string
+  value: number
+  notes: string
 }
 
 export function FieldVisitForm({ agentId, farmers, initialFarmerId, initialPlots }: FieldVisitFormProps) {
@@ -40,6 +48,8 @@ export function FieldVisitForm({ agentId, farmers, initialFarmerId, initialPlots
     pest_disease_notes: "",
     photos: [] as string[],
   })
+
+  const [disbursements, setDisbursements] = useState<Disbursement[]>([])
 
   useEffect(() => {
     if (formData.farmer_id) {
@@ -72,6 +82,20 @@ export function FieldVisitForm({ agentId, farmers, initialFarmerId, initialPlots
     }))
   }
 
+  const addDisbursement = () => {
+    setDisbursements([...disbursements, { item_name: "", quantity: 0, unit: "", value: 0, notes: "" }])
+  }
+
+  const removeDisbursement = (index: number) => {
+    setDisbursements(disbursements.filter((_, i) => i !== index))
+  }
+
+  const updateDisbursement = (index: number, field: keyof Disbursement, value: any) => {
+    const updated = [...disbursements]
+    updated[index] = { ...updated[index], [field]: value }
+    setDisbursements(updated)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -95,9 +119,37 @@ export function FieldVisitForm({ agentId, farmers, initialFarmerId, initialPlots
         created_by: agentId,
       }
 
-      const { error: insertError } = await supabase.from("field_visits").insert(visitData)
+      const { data: visitRecord, error: insertError } = await supabase
+        .from("field_visits")
+        .insert(visitData)
+        .select()
+        .single()
 
       if (insertError) throw insertError
+
+      if (disbursements.length > 0 && visitRecord) {
+        const disbursementRecords = disbursements
+          .filter((d) => d.item_name && d.quantity > 0)
+          .map((d) => ({
+            farmer_id: formData.farmer_id,
+            field_visit_id: visitRecord.id,
+            agent_id: agentId,
+            item_name: d.item_name,
+            quantity: d.quantity,
+            unit: d.unit,
+            value: d.value,
+            disbursement_date: formData.visit_date,
+            notes: d.notes,
+          }))
+
+        if (disbursementRecords.length > 0) {
+          const { error: disbursementError } = await supabase.from("input_disbursements").insert(disbursementRecords)
+
+          if (disbursementError) {
+            console.error("[v0] Error saving disbursements:", disbursementError)
+          }
+        }
+      }
 
       if (initialFarmerId) {
         router.push(`/dashboard/farmers/${initialFarmerId}`)
@@ -286,6 +338,117 @@ export function FieldVisitForm({ agentId, farmers, initialFarmerId, initialPlots
                     className="w-full h-32 object-cover rounded-lg"
                   />
                 ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4 border-t pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="font-inter text-base">Farm Input Disbursements</Label>
+                <p className="text-sm text-muted-foreground">Record any inputs provided to the farmer</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addDisbursement}
+                className="rounded-[10px] bg-transparent"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
+              </Button>
+            </div>
+
+            {disbursements.map((disbursement, index) => (
+              <Card key={index} className="p-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="font-inter">Item {index + 1}</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeDisbursement(index)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="font-inter">Item Name</Label>
+                      <Input
+                        placeholder="e.g., NPK Fertilizer, Seeds, Pesticide"
+                        value={disbursement.item_name}
+                        onChange={(e) => updateDisbursement(index, "item_name", e.target.value)}
+                        className="rounded-[10px]"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-inter">Unit</Label>
+                      <Select
+                        value={disbursement.unit}
+                        onValueChange={(value) => updateDisbursement(index, "unit", value)}
+                      >
+                        <SelectTrigger className="rounded-[10px]">
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                          <SelectItem value="bags">Bags</SelectItem>
+                          <SelectItem value="liters">Liters</SelectItem>
+                          <SelectItem value="pieces">Pieces</SelectItem>
+                          <SelectItem value="bottles">Bottles</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-inter">Quantity</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0"
+                        value={disbursement.quantity || ""}
+                        onChange={(e) => updateDisbursement(index, "quantity", Number.parseFloat(e.target.value) || 0)}
+                        className="rounded-[10px]"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-inter">Value (₦)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0"
+                        value={disbursement.value || ""}
+                        onChange={(e) => updateDisbursement(index, "value", Number.parseFloat(e.target.value) || 0)}
+                        className="rounded-[10px]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="font-inter">Notes (Optional)</Label>
+                    <Input
+                      placeholder="Additional notes about this disbursement"
+                      value={disbursement.notes}
+                      onChange={(e) => updateDisbursement(index, "notes", e.target.value)}
+                      className="rounded-[10px]"
+                    />
+                  </div>
+                </div>
+              </Card>
+            ))}
+
+            {disbursements.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No disbursements added. Click "Add Item" to record farm inputs provided.
               </div>
             )}
           </div>

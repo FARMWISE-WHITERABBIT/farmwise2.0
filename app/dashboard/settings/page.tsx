@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { OrganizationSettingsForm } from "@/components/organization-settings-form"
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -18,6 +19,16 @@ export default async function SettingsPage() {
 
   const { data: userData } = await supabase.from("users").select("*").eq("id", user.id).single()
 
+  let organizationSettings = null
+  if (userData && ["admin", "super_admin"].includes(userData.role)) {
+    const { data } = await supabase
+      .from("organization_settings")
+      .select("*")
+      .eq("organization_id", userData.organization_id)
+      .single()
+    organizationSettings = data
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -28,6 +39,13 @@ export default async function SettingsPage() {
       <Separator />
 
       <div className="grid gap-6">
+        {userData && ["admin", "super_admin"].includes(userData.role) && (
+          <>
+            <OrganizationSettingsForm settings={organizationSettings} organizationId={userData.organization_id} />
+            <Separator />
+          </>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle className="font-poppins">Profile Information</CardTitle>

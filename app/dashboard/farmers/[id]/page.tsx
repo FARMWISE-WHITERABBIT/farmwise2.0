@@ -97,6 +97,16 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
     console.error("[v0] Error fetching financial summary:", financialError)
   }
 
+  const { data: livestock, error: livestockError } = await supabase
+    .from("livestock")
+    .select("*")
+    .eq("farmer_id", id)
+    .order("created_at", { ascending: false })
+
+  if (livestockError) {
+    console.error("[v0] Error fetching livestock:", livestockError)
+  }
+
   // Collect all photos from field visits and plots
   const allPhotos: string[] = []
 
@@ -124,6 +134,7 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
       farmerUser={farmerUser}
       plots={plots || []}
       activities={activities || []}
+      livestock={livestock || []}
       allPhotos={allPhotos}
       financialSummary={financialSummary}
       farmerId={id}

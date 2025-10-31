@@ -14,7 +14,7 @@ import { ArrowLeft, ArrowRight, Save, Loader2 } from "lucide-react"
 import { PhotoUpload } from "@/components/photo-upload"
 import { CropSelector } from "@/components/crop-selector"
 import { useToast } from "@/hooks/use-toast"
-import { NIGERIA_STATES, getLGAsForState } from "@/lib/data/nigeria-states-lgas"
+import { NIGERIA_STATES, getLGAsForState, getWardsForLGA } from "@/lib/data/nigeria-states-lgas"
 
 interface FarmerRegistrationFormProps {
   userId: string
@@ -32,6 +32,7 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [availableLGAs, setAvailableLGAs] = useState<string[]>([])
+  const [availableWards, setAvailableWards] = useState<string[]>([])
   const [selectedCrops, setSelectedCrops] = useState<CropWithHectares[]>([])
 
   const [formData, setFormData] = useState({
@@ -52,7 +53,7 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
 
     // Address
     residential_address: "",
-    city_town: "",
+    ward: "",
     lga: "",
     state: "",
     nearest_landmark: "",
@@ -86,10 +87,19 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
   })
 
   const handleInputChange = (field: string, value: string | boolean) => {
+    if (field === "gender") {
+      console.log("[v0] Gender field changed to:", value)
+    }
+
     if (field === "state") {
       const lgas = getLGAsForState(value as string)
       setAvailableLGAs(lgas)
-      setFormData((prev) => ({ ...prev, [field]: value, lga: "" }))
+      setFormData((prev) => ({ ...prev, [field]: value, lga: "", ward: "" }))
+      setAvailableWards([])
+    } else if (field === "lga") {
+      const wards = getWardsForLGA(value as string)
+      setAvailableWards(wards)
+      setFormData((prev) => ({ ...prev, [field]: value, ward: "" }))
     } else {
       setFormData((prev) => ({ ...prev, [field]: value }))
     }
@@ -98,6 +108,7 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
   const handleSubmit = async () => {
     setIsLoading(true)
     console.log("[v0] Starting farmer registration...")
+    console.log("[v0] Form data gender value:", formData.gender)
 
     try {
       const supabase = createClient()
@@ -141,7 +152,7 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
         email: formData.email || null,
         whatsapp_number: formData.whatsapp_number || null,
         residential_address: formData.residential_address || null,
-        city_town: formData.city_town || null,
+        ward: formData.ward,
         lga: formData.lga,
         state: formData.state,
         nearest_landmark: formData.nearest_landmark || null,
@@ -172,7 +183,8 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
         verification_status: formData.primary_phone ? "phone_verified" : "unverified",
       }
 
-      console.log("[v0] Inserting farmer data:", farmerData)
+      console.log("[v0] Farmer data being inserted:", JSON.stringify(farmerData, null, 2))
+      console.log("[v0] Gender value in farmerData:", farmerData.gender)
 
       const { error: insertError } = await supabase.from("farmers").insert(farmerData)
 
@@ -445,15 +457,25 @@ export function FarmerRegistrationForm({ userId }: FarmerRegistrationFormProps) 
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="city_town" className="font-inter">
-                    City/Town
+                  <Label htmlFor="ward" className="font-inter">
+                    Ward
                   </Label>
-                  <Input
-                    id="city_town"
-                    value={formData.city_town}
-                    onChange={(e) => handleInputChange("city_town", e.target.value)}
-                    className="rounded-[10px] border-[rgba(0,0,0,0.23)] font-inter"
-                  />
+                  <Select
+                    value={formData.ward}
+                    onValueChange={(value) => handleInputChange("ward", value)}
+                    disabled={!formData.lga}
+                  >
+                    <SelectTrigger className="rounded-[10px] border-[rgba(0,0,0,0.23)]">
+                      <SelectValue placeholder={formData.lga ? "Select ward" : "Select LGA first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableWards.map((ward) => (
+                        <SelectItem key={ward} value={ward}>
+                          {ward}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
