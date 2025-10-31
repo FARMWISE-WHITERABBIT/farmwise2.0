@@ -62,6 +62,7 @@ export interface Farmer {
   email?: string
   whatsapp_number?: string
   residential_address?: string
+  ward?: string
   city_town?: string
   lga: string
   state: string

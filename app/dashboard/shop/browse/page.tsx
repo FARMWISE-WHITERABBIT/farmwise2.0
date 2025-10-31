@@ -15,7 +15,7 @@ export default async function ShopBrowsePage() {
   }
 
   // Fetch user profile to get organization
-  const { data: profile } = await supabase.from("profiles").select("organization_id, role").eq("id", user.id).single()
+  const { data: profile } = await supabase.from("users").select("organization_id, role").eq("id", user.id).single()
 
   if (!profile?.organization_id) {
     return (

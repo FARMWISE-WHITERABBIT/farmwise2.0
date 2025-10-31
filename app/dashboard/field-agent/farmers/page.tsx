@@ -79,10 +79,10 @@ export default async function FieldAgentFarmersPage() {
                         <Phone className="w-3 h-3" />
                         {farmer.primary_phone}
                       </span>
-                      {farmer.city_town && (
+                      {(farmer.ward || farmer.city_town) && (
                         <span className="flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
-                          {farmer.city_town}
+                          {farmer.ward || farmer.city_town}
                         </span>
                       )}
                     </div>
