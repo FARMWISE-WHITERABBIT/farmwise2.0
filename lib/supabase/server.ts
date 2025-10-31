@@ -61,24 +61,7 @@ export async function createClient() {
 
   console.log("[v0] Creating Supabase server client with URL:", supabaseUrl)
 
-  const customFetch: typeof fetch = async (input, init) => {
-    try {
-      console.log("[v0] Server fetch request:", typeof input === "string" ? input : input.url)
-      const response = await fetch(input, init)
-      console.log("[v0] Server fetch response status:", response.status)
-      return response
-    } catch (error) {
-      console.error("[v0] Server fetch error:", error instanceof Error ? error.message : "Unknown error")
-      console.error("[v0] Fetch error details:", error)
-      // Re-throw the error so Supabase can handle it
-      throw error
-    }
-  }
-
   return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      fetch: customFetch,
-    },
     cookies: {
       getAll() {
         return cookieStore.getAll()
